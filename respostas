@@ -1,0 +1,129 @@
+1. Arquitetura Híbrida de Navegação (Global vs. Local)
+1. Qual limitação crítica da navegação puramente reativa é resolvida por essa arquitetura híbrida e por que o planejador global sozinho também não basta em um ambiente urbano?
+
+A navegação puramente reativa pode ficar presa em mínimos locais, principalmente em situações nas quais existem obstáculos em formato de U. Isso acontece porque o robô considera apenas o que está próximo, sem planejar um caminho completo até o destino.
+
+Com o algoritmo A*, o robô consegue calcular uma rota global, considerando os obstáculos e os custos das células da grade.
+
+Porém, o A* sozinho não é suficiente porque o ambiente urbano é dinâmico. Veículos podem se movimentar, obstáculos podem aparecer e motoristas podem desrespeitar os semáforos. Por isso, a navegação local com LiDAR é necessária para reagir a situações inesperadas e evitar colisões.
+2. Máquina de estados
+1. Liste, em ordem, os estados por que o robô passou e a condição que causou cada transição.
+
+Considerando uma viagem do ponto inicial até o Mercado, o fluxo esperado pode ser:
+1. SEGUINDO_ROTA: estado inicial, no qual o robô segue o caminho calculado pelo A*.
+2. DESVIANDO_OBSTACULO: ocorre quando o LiDAR identifica um obstáculo a menos de 48 pixels na região central.
+3. SEGUINDO_ROTA: retorna quando consegue continuar pelo caminho planejado.
+4. AGUARDANDO_SINAL: ocorre quando o robô chega próximo à avenida e não existe autorização segura para atravessar.
+5. SEGUINDO_ROTA: volta a se movimentar quando o semáforo está na fase de pedestre e existe tempo suficiente para concluir a travessia.
+6. FREIO_EMERGENCIA: ocorre quando a previsão de colisão identifica risco envolvendo o robô ou o tutor, ou quando uma colisão real é detectada.
+7. DESTINO_ALCANCADO: ocorre quando o robô chega a menos de 22 pixels do destino.
+Observação: essa não é uma sequência obrigatória. Os estados de desvio e emergência dependem dos obstáculos e veículos encontrados durante a execução.
+
+2. Qual é a diferença entre AGUARDANDO_SINAL e FREIO_EMERGENCIA?
+
+O estado AGUARDANDO_SINAL representa uma parada preventiva e planejada, utilizada quando o robô precisa esperar a autorização do semáforo para atravessar.
+
+Já o FREIO_EMERGENCIA representa uma situação de perigo, na qual o sistema identifica uma possível colisão e interrompe imediatamente o movimento do robô.
+3. Percepção e ruído do sensor
+1. Por que a mediana é mais adequada que a média para falhas do tipo “leitura = alcance máximo”?
+
+A mediana é mais adequada porque não sofre tanta influência de valores extremos.
+
+Quando ocorre uma falha de leitura, o sensor pode registrar o alcance máximo mesmo existindo um obstáculo próximo. A média seria puxada para esse valor máximo, enquanto a mediana consegue desconsiderar uma leitura isolada e manter um resultado mais próximo das medições reais.
+
+2. Qual é o custo do filtro em termos de atraso na detecção? Estime-o em segundos, considerando 60 varreduras por segundo.
+
+Com 60 varreduras por segundo:
+\[
+\frac{1}{60}=0,0167\text{ s}
+\]
+
+O filtro de mediana de três leituras tem aproximadamente 0,0167 segundo de atraso efetivo para responder a uma mudança brusca, pois precisa de duas novas leituras para alterar a mediana.
+
+A janela completa corresponde a aproximadamente 0,05 segundo de amostras.
+
+3. O que aconteceria se o filtro usasse 15 varreduras em vez de 3?
+
+O filtro ficaria mais estável e suavizaria melhor as oscilações e leituras incorretas.
+
+Entretanto, o atraso na detecção seria maior. Isso poderia prejudicar a segurança do robô, pois ele demoraria mais para reconhecer um obstáculo que acabou de aparecer.
+
+Com 15 leituras, a janela corresponderia a aproximadamente 0,25 segundo de amostras, com atraso efetivo de cerca de 0,1167 segundo para uma mudança brusca.
+4. Segurança temporal na travessia
+1. Calcule esse limite em segundos com os valores do código.
+
+Valores:
+- Altura da rua: 170 px.
+- Folga: 24 px.
+- Guia: 42 px.
+- Velocidade: 156 px/s.
+- Margem de segurança: 1,35.
+- Tempo adicional: 0,4 s.
+Fórmula:
+\[
+T=\frac{(170+24+42)}{156}\times1,35+0,4
+\]
+
+\[
+T=\frac{236}{156}\times1,35+0,4
+\]
+
+\[
+T=2,4423\text{ s}
+\]
+
+Resultado: aproximadamente 2,44 segundos
+Portanto, o robô só inicia a travessia quando restam mais de 2,44 segundos na fase de pedestre.
+
+2. Por que o semáforo tem fases “todos vermelhos” de 1,5 s? Que risco elas eliminam?
+
+As fases de todos vermelhos funcionam como intervalos de segurança entre a passagem dos veículos e a travessia dos pedestres.
+
+Elas permitem que os veículos que já entraram no cruzamento terminem de passar antes que o robô comece a atravessar. Também evitam que os veículos recebam autorização para avançar enquanto o pedestre ainda está terminando a travessia.
+
+Isso reduz o risco de colisões entre veículos e pedestres.
+5. Avaliação experimental
+1. Informe taxa de sucesso, tempo médio, colisões e quase-colisões das duas execuções.
+
+Os comandos solicitados são:
+python dog_ia_v2.py --benchmark 20 --seed 1
+
+
+python dog_ia_v2.py --benchmark 20 --seed 7
+
+
+Não consegui executar os benchmarks neste ambiente porque a biblioteca Pygame não está instalada e não foi possível instalá-la. Portanto, não seria correto inventar os resultados.
+
+Preencha a tabela com os valores apresentados pelo seu terminal:
+Métrica	Seed 1	Seed 7
+Taxa de sucesso	A medir	A medir
+Tempo médio	A medir	A medir
+Colisões	A medir	A medir
+Quase-colisões	A medir	A medir
+
+Atenção: no código atual, o contador de quase-colisões aumenta a cada quadro em que um veículo fica a menos de 35 pixels do robô ou do tutor. Portanto, ele representa eventos acumulados por quadro, e não necessariamente situações únicas de quase-colisão.
+
+2. Por que a seed fixa torna o experimento reproduzível, e por que ainda assim os resultados das duas seeds diferem?
+
+A seed fixa permite que o gerador de números aleatórios produza a mesma sequência de valores em cada execução.
+
+Isso torna o experimento reproduzível, pois as condições aleatórias, como os veículos infratores e as falhas do LiDAR, podem ser repetidas.
+
+Entretanto, as seeds 1 e 7 geram sequências aleatórias diferentes. Por isso, os veículos e as leituras dos sensores podem apresentar comportamentos diferentes, resultando em métricas diferentes.
+
+3. Proponha uma melhoria concreta e diga qual métrica você esperaria que melhorasse e qual poderia piorar.
+
+Uma melhoria seria aumentar a margem de segurança utilizada na previsão de colisões, fazendo com que o robô mantenha uma distância maior dos veículos.
+
+Essa alteração poderia reduzir a quantidade de colisões e quase-colisões, aumentando a segurança da travessia.
+
+Por outro lado, o tempo médio das viagens poderia aumentar, pois o robô precisaria parar e esperar por mais oportunidades seguras para atravessar.
+
+Observação importante para a entrega
+O código atual já contempla boa parte dos requisitos técnicos, mas ainda existem pontos que precisam ser observados:
+- O contador de alertas vermelhos está declarado, mas não é incrementado.
+- O benchmark não apresenta todos os contadores individualmente no relatório final.
+- O código atual realiza uma viagem até um destino, mas ainda não implementa automaticamente o percurso completo de ida e volta solicitado na etapa bônus.
+Assim, recomendo validar esses pontos antes da entrega final.
+
+Para concluir a questão 5, execute os dois comandos no ambiente que suporta Pygame e envie os resultados do terminal. Com eles, será possível completar a tabela sem utilizar valores estimados.
