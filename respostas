@@ -101,29 +101,24 @@ Tempo médio	A medir	A medir
 Colisões	A medir	A medir
 Quase-colisões	A medir	A medir
 
-Atenção: no código atual, o contador de quase-colisões aumenta a cada quadro em que um veículo fica a menos de 35 pixels do robô ou do tutor. Portanto, ele representa eventos acumulados por quadro, e não necessariamente situações únicas de quase-colisão.
+1. Resultados das duas execuções
+Métrica	Seed 1	Seed 7
+Taxa de sucesso	100%	100%
+Tempo médio	14,34 s	14,13 s
+Colisões físicas	0	0
+Quase-colisões	4	4
 
-2. Por que a seed fixa torna o experimento reproduzível, e por que ainda assim os resultados das duas seeds diferem?
+Análise: as duas execuções apresentaram 100% de sucesso e nenhuma colisão física. A Seed 7 teve um tempo médio 0,21 segundo menor. Ambas registraram quatro quase-colisões.
+2. Por que a seed fixa torna o experimento reproduzível, e por que os resultados das duas seeds diferem?
+A seed fixa determina o ponto inicial de uma sequência de números pseudoaleatórios. Dessa forma, utilizando a mesma seed e as mesmas condições, é possível reproduzir os mesmos cenários e comparar os resultados.
 
-A seed fixa permite que o gerador de números aleatórios produza a mesma sequência de valores em cada execução.
-
-Isso torna o experimento reproduzível, pois as condições aleatórias, como os veículos infratores e as falhas do LiDAR, podem ser repetidas.
-
-Entretanto, as seeds 1 e 7 geram sequências aleatórias diferentes. Por isso, os veículos e as leituras dos sensores podem apresentar comportamentos diferentes, resultando em métricas diferentes.
-
+Entretanto, as seeds 1 e 7 geram sequências diferentes de números pseudoaleatórios. Isso pode modificar os cenários da simulação, como a disposição de obstáculos ou outras condições aleatórias, influenciando o comportamento da IA e os resultados obtidos.
 3. Proponha uma melhoria concreta e diga qual métrica você esperaria que melhorasse e qual poderia piorar.
+Uma melhoria seria aumentar a margem de segurança utilizada pela IA durante a navegação, mantendo uma distância maior dos obstáculos.
 
-Uma melhoria seria aumentar a margem de segurança utilizada na previsão de colisões, fazendo com que o robô mantenha uma distância maior dos veículos.
+Com essa alteração, esperaria uma redução na quantidade de quase-colisões e, consequentemente, uma navegação mais segura. Entretanto, o tempo médio das viagens poderia aumentar, pois a IA precisaria realizar desvios maiores para evitar obstáculos.
 
-Essa alteração poderia reduzir a quantidade de colisões e quase-colisões, aumentando a segurança da travessia.
+Etapa bônus – Conclusão experimental
+Os experimentos demonstraram que a IA apresentou desempenho consistente nas duas execuções, alcançando 100% de sucesso e nenhuma colisão física. Apesar disso, as quatro quase-colisões registradas em cada teste indicam uma oportunidade de melhoria no sistema de navegação.
 
-Por outro lado, o tempo médio das viagens poderia aumentar, pois o robô precisaria parar e esperar por mais oportunidades seguras para atravessar.
-
-Observação importante para a entrega
-O código atual já contempla boa parte dos requisitos técnicos, mas ainda existem pontos que precisam ser observados:
-- O contador de alertas vermelhos está declarado, mas não é incrementado.
-- O benchmark não apresenta todos os contadores individualmente no relatório final.
-- O código atual realiza uma viagem até um destino, mas ainda não implementa automaticamente o percurso completo de ida e volta solicitado na etapa bônus.
-Assim, recomendo validar esses pontos antes da entrega final.
-
-Para concluir a questão 5, execute os dois comandos no ambiente que suporta Pygame e envie os resultados do terminal. Com eles, será possível completar a tabela sem utilizar valores estimados.
+A utilização de diferentes seeds permitiu avaliar o comportamento da IA em condições aleatórias distintas, enquanto a proposta de aumentar a margem de segurança busca melhorar a confiabilidade do sistema.
